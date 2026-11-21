@@ -145,7 +145,7 @@ sources footer, same layout positions.
   clearly visible across the page and the Earth limb shows at the edges,
   while all text stays fully legible.
 - `README.md`: "How it was made" updated to describe the photo background
-  (2,490 bytes, still < 4096).
+  (2,552 bytes, still < 4096).
 - `main.ts` unchanged (still v3).
 
 ### v4 tests (2026-11-21 ~13:45 WIB)
@@ -166,7 +166,7 @@ sources footer, same layout positions.
   IDAT chunks than the flat-colour v3).
 - PIL verified `/tmp/n21-out4/entry.png`: valid PNG, 1024x1024 RGB,
   532,357 bytes (≤ 1 MiB).
-- README 2,490 bytes (< 4096).
+- README 2,552 bytes (< 4096).
 - Recording note: `makefun record` refused to start for this competition
   (HTTP 400: "news-image-20261121 does not take recorded transcripts: its
   entries upload their transcripts (a bundle or loose files)"), same as
