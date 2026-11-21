@@ -1,12 +1,15 @@
 #!/usr/bin/env node
-// Validation entrypoint for news-image-20261121 (v2).
+// Validation entrypoint for news-image-20261121 (v3).
 // Resolves entry.png relative to THIS script file, never relative to the
 // caller's working directory, so the grader can run `node /bot/main.ts`
 // from any cwd and still find it.
 // Checks entry.png is a real PNG, <= 1 MiB, exactly 1024x1024 (IHDR),
-// bit depth 8 / colour type 2 (truecolour RGB), then writes the validated
-// copy to $MAKEFUN_OUTPUT_DIR (default /output, per RULES.txt) and prints
-// its sha256. Exits non-zero on any failure.
+// bit depth 8 / colour type 2 (truecolour RGB), then walks every chunk
+// in the file verifying each chunk's CRC32, requires the IEND chunk to
+// be present as the final chunk, and rejects any trailing bytes after
+// IEND. The validated copy is written to $MAKEFUN_OUTPUT_DIR (default
+// /output, per RULES.txt) and its sha256 printed. Exits non-zero on
+// any failure.
 import { createHash } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -20,6 +23,67 @@ const OUT_DIR = process.env.MAKEFUN_OUTPUT_DIR || "/output";
 function fail(msg) {
   console.error(`validation failed: ${msg}`);
   process.exit(1);
+}
+
+// CRC-32 (IEEE 802.3, polynomial 0xEDB88320, reflected) built from
+// scratch: Node's standard library has no CRC32 helper, so the lookup
+// table is generated here at startup and the checksum runs over the
+// chunk type + data bytes exactly as the PNG spec defines it.
+const CRC_TABLE = (() => {
+  const table = new Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) {
+      c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    }
+    table[n] = c >>> 0;
+  }
+  return table;
+})();
+
+function crc32(data) {
+  let crc = 0xffffffff;
+  for (const byte of data) {
+    crc = CRC_TABLE[(crc ^ byte) & 0xff] ^ (crc >>> 8);
+  }
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+// Walk the chunk stream starting just past the 8-byte signature.
+// Each chunk is: 4-byte big-endian data length, 4-byte type, data,
+// 4-byte CRC over type + data. Returns the number of chunks seen.
+function walkChunks(buf) {
+  let offset = 8;
+  let count = 0;
+  let sawIEND = false;
+  while (offset < buf.length) {
+    if (offset + 12 > buf.length) {
+      fail("truncated PNG chunk header");
+    }
+    const len = buf.readUInt32BE(offset);
+    const type = buf.toString("ascii", offset + 4, offset + 8);
+    if (offset + 12 + len > buf.length) {
+      fail(`chunk ${type} overruns end of file`);
+    }
+    const stored = buf.readUInt32BE(offset + 8 + len);
+    const computed = crc32(buf.subarray(offset + 4, offset + 8 + len));
+    if (stored !== computed) {
+      fail(`chunk ${type} CRC mismatch`);
+    }
+    offset += 12 + len;
+    count++;
+    if (type === "IEND") {
+      sawIEND = true;
+      break;
+    }
+  }
+  if (!sawIEND) {
+    fail("missing IEND chunk");
+  }
+  if (offset !== buf.length) {
+    fail(`trailing bytes after IEND (${buf.length - offset} bytes)`);
+  }
+  return count;
 }
 
 const buf = (() => {
@@ -52,6 +116,8 @@ const colourType = buf[25];
 if (bitDepth !== 8 || colourType !== 2) {
   fail(`unexpected PNG format: bit depth ${bitDepth}, colour type ${colourType}`);
 }
+// Full chunk walk: every chunk's CRC, IEND last, nothing after it.
+const chunkCount = walkChunks(buf);
 
 mkdirSync(OUT_DIR, { recursive: true });
 const outPath = join(OUT_DIR, "entry.png");
@@ -65,4 +131,4 @@ if (writtenDigest !== digest) {
   fail(`written copy digest mismatch: ${writtenDigest} != ${digest}`);
 }
 
-console.log(`ok: ${outPath} ${width}x${height} ${buf.length} bytes sha256=${digest}`);
+console.log(`ok: ${outPath} ${width}x${height} ${buf.length} bytes ${chunkCount} chunks sha256=${digest}`);

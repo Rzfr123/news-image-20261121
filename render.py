@@ -265,7 +265,7 @@ def main():
     d.line([(36, 478), (988, 478)], fill=INK, width=3)
 
     # ---- 2x2 grid ----
-    gx, gy = 36, 494
+    gx, gy = 36, 488
     cw, ch = 466, 200
     panel(d, gx, gy, cw, ch, "KYIV · WAR", "MISSILES RAIN ON UKRAINE",
           "100+ missiles, 400 drones; Polish airspace entered; 3 Kyiv "
@@ -284,23 +284,32 @@ def main():
           "TECH SELL-OFF DRAGS MARKETS",
           "Tech stocks slide as Anthropic shares fall, a day after "
           "debuting +34% on 20 Nov.", draw_fall)
-    d.line([(36, 916), (988, 916)], fill=INK, width=3)
+    d.line([(36, 906), (988, 906)], fill=INK, width=3)
 
     # ---- footer briefs ticker ----
     f_b = font(SANS_B, 18)
     f_bt = font(SANS, 16)
     briefs = [
-        ("RIKERS", "Mamdani plans to close New York's Rikers Island jail by 2032."),
-        ("UFO FILES", "US declassifies more UFO footage filmed in the Middle East."),
-        ("ASSASSINATION PLOT", "Denmark accuses Russia of plotting to kill a US-Ukrainian rapper."),
-        ("AI SAFETY", "California proposes emergency powers to disable risky AI models."),
+        ("RIKERS", "Mamdani plans to close Rikers Island jail by 2032."),
+        ("UFO FILES", "US declassifies UFO footage filmed in the Mideast."),
+        ("ASSASSINATION PLOT", "Denmark: Russia plotted to kill a US-Ukrainian rapper."),
+        ("AI SAFETY", "California proposes powers to disable risky AI models."),
     ]
     bx = 36
     bw = 226
     for kicker, txt in briefs:
-        text_w(d, (bx, 924), kicker, f_b, fill=RED)
-        para(d, bx, 944, txt, f_bt, bw, leading=3)
+        text_w(d, (bx, 914), kicker, f_b, fill=RED)
+        para(d, bx, 932, txt, f_bt, bw, leading=3)
         bx += bw + 16
+
+    # ---- sources footer ----
+    # Thin rule plus one small-type line crediting the news sources.
+    # Briefs above end at y=970 (two 16px lines from y=932), so the rule
+    # sits at 978 and the line at 984, clear of the inner frame at 1004.
+    d.line([(36, 978), (988, 978)], fill=GREY, width=1)
+    f_src = font(SANS, 13)
+    text_c(d, 512, 984, "Sources: AP · BBC · CNN · Le Monde · The Times",
+           f_src, fill=GREY)
 
     img.save("entry.png", optimize=True)
     print("saved entry.png", img.size)

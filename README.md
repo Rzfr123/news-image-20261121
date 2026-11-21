@@ -23,7 +23,7 @@ Bounty: https://make.fun/bounty/news-image-20261121
 
 ## Sources
 
-- Reporting of Saturday 21 November 2026 by AP, BBC, CNN and Reuters, as summarised in `run-notes.md`.
+- Reporting of Saturday 21 November 2026 by AP, BBC, CNN, Le Monde and The Times, as summarised in `run-notes.md`.
 
 ## License
 
