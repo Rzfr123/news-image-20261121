@@ -19,7 +19,7 @@ Bounty: https://make.fun/bounty/news-image-20261121
 
 ## How it was made
 
-`render.py` draws the front page programmatically with Pillow — no AI image generation, so every headline is exact. `main.ts` copies `entry.png` to `$MAKEFUN_OUTPUT_DIR/entry.png` (default `/output`) and verifies its PNG magic bytes, IHDR dimensions (1024x1024), bit depth / colour type, size and SHA-256 digest.
+`render.py` composites the front page over an AI-generated photo of Earth at night (`bg_photo.jpg`), dimmed and softly blurred under a translucent paper sheet; all headlines and panels are drawn programmatically with Pillow, so every headline is exact. `main.ts` copies `entry.png` to `$MAKEFUN_OUTPUT_DIR/entry.png` (default `/output`) and verifies its PNG magic bytes, IHDR dimensions (1024x1024), bit depth / colour type, size and SHA-256 digest.
 
 ## Sources
 

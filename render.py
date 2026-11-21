@@ -1,14 +1,18 @@
 #!/usr/bin/env python3
 """Render the news-image-20261121 entry: a newspaper front page summing up
 Saturday 21 November 2026. Output: entry.png (1024x1024, deterministic).
-Drawn programmatically with Pillow; no AI image generation, so every
-headline is exact text."""
+Background is an AI-generated photo of Earth at night (bg_photo.jpg),
+dimmed and softly blurred under a translucent paper sheet; all headlines
+and panels are drawn programmatically with Pillow, so every headline is
+exact text."""
 import math
+import os
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
 
 W = H = 1024
 PAPER = (246, 241, 229)
+PAPER_ALPHA = 185  # paper sheet opacity over the photo (0-255)
 INK = (26, 26, 26)
 RED = (176, 42, 32)
 BLUE = (31, 58, 95)
@@ -233,7 +237,21 @@ def panel(d, x, y, w, h, kicker, headline, caption, art):
 
 
 def main():
-    img = Image.new("RGB", (W, H), PAPER)
+    here = os.path.dirname(os.path.abspath(__file__))
+    # ---- photographic background ----
+    # Earth at night (bg_photo.jpg, shipped in the repo): dimmed and
+    # softly blurred so the city lights become a gentle glow that never
+    # fights the text. The newspaper page is a translucent paper sheet
+    # over it, inset 10px so a band of the photo frames the page.
+    base = Image.open(os.path.join(here, "bg_photo.jpg")).convert("RGB")
+    base = base.resize((W, H), Image.LANCZOS)
+    base = ImageEnhance.Brightness(base).enhance(0.70)
+    base = base.filter(ImageFilter.GaussianBlur(3))
+    img = base.convert("RGBA")
+    sheet = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    ImageDraw.Draw(sheet).rectangle([10, 10, 1014, 1014],
+                                    fill=PAPER + (PAPER_ALPHA,))
+    img = Image.alpha_composite(img, sheet).convert("RGB")
     d = ImageDraw.Draw(img)
     # frames
     d.rectangle([10, 10, 1014, 1014], outline=INK, width=5)
@@ -311,7 +329,7 @@ def main():
     text_c(d, 512, 984, "Sources: AP · BBC · CNN · Le Monde · The Times",
            f_src, fill=GREY)
 
-    img.save("entry.png", optimize=True)
+    img.save(os.path.join(here, "entry.png"), optimize=True)
     print("saved entry.png", img.size)
 
 

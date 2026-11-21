@@ -18,8 +18,10 @@ Entry title: **21 November 2026 — The World's News in One Image**
 | Brief (notes only) | Nearly 600 women killed in South Africa within three months | Fifth brief; front page holds four, this one is recorded here |
 
 Design: newspaper front page, masthead "21 NOVEMBER 2026", drawn programmatically
-with `render.py` (Python + Pillow, DejaVu/Liberation fonts). No AI image generation,
-so all text is exact. Simple drawn icons per story (UK + EU flags over a skyline
+with `render.py` (Python + Pillow, DejaVu/Liberation fonts) over a photographic
+background: an AI-generated photo of Earth at night (`bg_photo.jpg`, city
+lights over Europe/Africa), dimmed and softly blurred under a translucent
+paper sheet, so all text is drawn and exact. Simple drawn icons per story (UK + EU flags over a skyline
 and an intact bridge, broken Kyiv bridge, scales of justice, three flags over a
 globe, falling market chart).
 
@@ -27,8 +29,13 @@ globe, falling market chart).
 
 - File: `entry.png`
 - Dimensions: 1024 x 1024 px
-- Size: 140,575 bytes (limit 1,048,576)
-- SHA-256: `0d23df45a0d9e029001b5844cd3edf1062fbea4d5342b8fe3e3dd551d8ba97f2`
+- Size: 532,357 bytes (limit 1,048,576)
+- SHA-256: `564531dcd5e7e3ee60b043cf304f76389c4f901ca9ab22a6aa6cbce1a17271c3`
+- Background: `bg_photo.jpg` (237,706 bytes, 1024x1024), AI-generated photo
+  of Earth at night, shipped in the repo; `render.py` loads it relative to
+  its own file, dims it to 0.70 brightness, blurs it (radius 3), and lays
+  the paper sheet over it at alpha 185/255, inset 10px so a band of the
+  photo frames the page.
 
 ## Local tests (2026-11-21 ~13:30 WIB)
 
@@ -115,8 +122,56 @@ written fresh for this revision:
 
 ## Files in repo
 
-`main.ts`, `package.json`, `entry.png`, `render.py`, `README.md`, `LICENSE`,
-`.makefun/owner.json`, `run-notes.md`, `.gitignore`
+`main.ts`, `package.json`, `entry.png`, `render.py`, `bg_photo.jpg`,
+`README.md`, `LICENSE`, `.makefun/owner.json`, `run-notes.md`, `.gitignore`
+
+## Revision v4 (2026-11-21 ~13:45 WIB) — photographic background
+
+User direction (verbatim): "Ganti background bagus seperti foto". The flat
+cream/beige page background is replaced by a photographic background; every
+other element is untouched — same masthead, lead, four panels, four briefs,
+sources footer, same layout positions.
+
+- `bg_photo.jpg` (new file): AI-generated photo of Earth at night seen from
+  space — golden city lights over Europe, Africa and the Middle East, thin
+  atmosphere glow. Generated 1024x1024 via the media pipeline, saved as
+  JPEG quality 85 (237,706 bytes) to keep the entry well under 1 MiB.
+- `render.py`: loads `bg_photo.jpg` relative to its own file (also made the
+  `entry.png` save path script-relative, so rendering works from any CWD),
+  dims the photo to 0.70 brightness, blurs it (radius 3) so the city lights
+  become a soft glow, and composites the paper sheet over it at alpha
+  185/255, inset 10px so a band of the photo frames the page. First tried
+  alpha 200 (photo too subtle), then 185: the golden city-light mottling is
+  clearly visible across the page and the Earth limb shows at the edges,
+  while all text stays fully legible.
+- `README.md`: "How it was made" updated to describe the photo background
+  (2,490 bytes, still < 4096).
+- `main.ts` unchanged (still v3).
+
+### v4 tests (2026-11-21 ~13:45 WIB)
+
+- `python3 render.py` — rendered cleanly, three runs, same sha256 every
+  time (`564531dc...71c3`), deterministic. Image visually checked at full
+  size and at 300px: masthead, lead headline, all four panel headlines and
+  captions, all four briefs and the sources footer are fully legible at
+  300px; no overlaps, no clipped text; photo reads as a real photo, not a
+  flat colour.
+- `main.ts` v3 re-tested, unchanged: `MAKEFUN_OUTPUT_DIR=/tmp/n21-out4
+  node main.ts` and `/tmp/n21-out5` from the repo dir — exit 0, same digest,
+  `cmp` clean both ways and against the source; run from /tmp with the
+  absolute path (`/tmp/n21-out6`) — exit 0, same digest, `cmp` clean.
+  Default-output test: `cd /tmp && env -u MAKEFUN_OUTPUT_DIR node
+  <repo>/main.ts` → exit 0, wrote `/output/entry.png`, byte-identical
+  (`cmp` clean). Success line now reports 11 chunks (photo PNG has more
+  IDAT chunks than the flat-colour v3).
+- PIL verified `/tmp/n21-out4/entry.png`: valid PNG, 1024x1024 RGB,
+  532,357 bytes (≤ 1 MiB).
+- README 2,490 bytes (< 4096).
+- Recording note: `makefun record` refused to start for this competition
+  (HTTP 400: "news-image-20261121 does not take recorded transcripts: its
+  entries upload their transcripts (a bundle or loose files)"), same as
+  the news-image-20261120 round — so no live recorder; this session's
+  jsonl is the transcript the coordinator bundles, as in v3.
 
 ## Bundle notes (for the parent's later step — NOT acted on here)
 
